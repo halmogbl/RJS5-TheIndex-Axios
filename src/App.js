@@ -1,25 +1,42 @@
 import React, { Component } from "react";
-
-import authors from "./data.js";
+import axios from "axios";
 
 // Components
 import Sidebar from "./Sidebar";
 import AuthorsList from "./AuthorsList";
 import AuthorDetail from "./AuthorDetail";
-
+import Loading from "./Loading";
 class App extends Component {
   state = {
     currentAuthor: null,
-    filteredAuthors: authors
+    filteredAuthors: [],
+    authors: [],
+    loading: true,
+    error: null
   };
 
-  selectAuthor = author => this.setState({ currentAuthor: author });
+  //`/https://the-index-api.herokuapp.com/api/authors/${author.id}/`
+
+  selectAuthor = async author => {
+    this.setState({ loading: true });
+    try {
+      const authorResponse = await axios.get(
+        `https://the-index-api.herokuapp.com/api/authors/${author.id}/`
+      );
+      let dataFromAuthorResponse = authorResponse.data;
+      this.setState({ currentAuthor: dataFromAuthorResponse, loading: false });
+    } catch (error) {
+      console.error("something went wrong");
+      console.error(error);
+      this.setState({ error: error });
+    }
+  };
 
   unselectAuthor = () => this.setState({ currentAuthor: null });
 
   filterAuthors = query => {
     query = query.toLowerCase();
-    let filteredAuthors = authors.filter(author => {
+    let filteredAuthors = this.state.authors.filter(author => {
       return `${author.first_name} ${author.last_name}`
         .toLowerCase()
         .includes(query);
@@ -41,7 +58,32 @@ class App extends Component {
     }
   };
 
+  componentDidMount() {
+    this.getAuthorsAndBooks();
+  }
+
+  getAuthorsAndBooks = async () => {
+    try {
+      const authorsResponse = await axios.get(
+        "https://the-index-api.herokuapp.com/api/authors/"
+      );
+      const booksAndAuthors = authorsResponse.data;
+      console.log(booksAndAuthors);
+      this.setState({
+        authors: booksAndAuthors,
+        filteredAuthors: booksAndAuthors,
+        loading: false
+      });
+    } catch (error) {
+      console.error("something went wrong");
+      console.error(error);
+      this.setState({ error: error });
+    }
+  };
+
   render() {
+    if (this.state.error) return <div>Wrong Wrong</div>;
+    if (this.state.loading) return <Loading />;
     return (
       <div id="app" className="container-fluid">
         <div className="row">

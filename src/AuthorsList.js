@@ -6,7 +6,7 @@ import SearchBar from "./SearchBar";
 
 class AuthorsList extends Component {
   render() {
-    const authorCards = this.props.authors.map(author => (
+    let authorCards = this.props.authors.map(author => (
       <AuthorCard
         key={author.first_name + author.last_name}
         author={author}
